@@ -1,0 +1,639 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API de Productos",
+    "version": "1.0.0",
+    "description": "API REST para gestionar productos, divisas y los precios de cada producto en distintas divisas.\n\nTodas las rutas requieren la cabecera `X-API-Key`. Use el botón **Authorize** para configurarla."
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Servidor actual"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Productos",
+      "description": "CRUD de productos"
+    },
+    {
+      "name": "Precios",
+      "description": "Precios de un producto en otras divisas"
+    },
+    {
+      "name": "Divisas",
+      "description": "Divisas disponibles"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/products": {
+      "get": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Listar productos",
+        "description": "Devuelve los productos paginados.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número de página",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Productos por página (máximo 100)",
+            "schema": {
+              "type": "integer",
+              "default": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de productos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      }
+                    },
+                    "links": {
+                      "type": "object",
+                      "description": "Enlaces de paginación"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "description": "Datos de paginación (página actual, total, etc.)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NoAutorizado"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Crear producto",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Producto creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NoAutorizado"
+          },
+          "422": {
+            "$ref": "#/components/responses/Validacion"
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Obtener un producto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID del producto",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Producto encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NoAutorizado"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Actualizar un producto",
+        "description": "Reemplaza todos los datos del producto, por eso se deben enviar todos los campos.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID del producto",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Producto actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NoAutorizado"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          },
+          "422": {
+            "$ref": "#/components/responses/Validacion"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Eliminar un producto",
+        "description": "Elimina el producto y todos sus precios asociados.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID del producto",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Producto eliminado, sin contenido"
+          },
+          "401": {
+            "$ref": "#/components/responses/NoAutorizado"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          }
+        }
+      }
+    },
+    "/products/{id}/prices": {
+      "get": {
+        "tags": [
+          "Precios"
+        ],
+        "summary": "Listar precios de un producto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID del producto",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Precios del producto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProductPrice"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NoAutorizado"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Precios"
+        ],
+        "summary": "Registrar un precio en otra divisa",
+        "description": "No se puede repetir una divisa para el mismo producto ni usar la divisa base del producto.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID del producto",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductPriceInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Precio creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProductPrice"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NoAutorizado"
+          },
+          "404": {
+            "$ref": "#/components/responses/NoEncontrado"
+          },
+          "422": {
+            "$ref": "#/components/responses/Validacion"
+          }
+        }
+      }
+    },
+    "/currencies": {
+      "get": {
+        "tags": [
+          "Divisas"
+        ],
+        "summary": "Listar divisas",
+        "description": "Sirve para conocer los `currency_id` válidos.",
+        "responses": {
+          "200": {
+            "description": "Lista de divisas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Currency"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NoAutorizado"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Clave definida en API_KEY del archivo .env"
+      }
+    },
+    "responses": {
+      "NoAutorizado": {
+        "description": "API key ausente o incorrecta",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "API key inválida o ausente."
+            }
+          }
+        }
+      },
+      "NoEncontrado": {
+        "description": "El recurso no existe",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "Recurso no encontrado."
+            }
+          }
+        }
+      },
+      "Validacion": {
+        "description": "Datos inválidos",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "example": {
+              "message": "El campo name es obligatorio.",
+              "errors": {
+                "name": [
+                  "El campo name es obligatorio."
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Currency": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "code": {
+            "type": "string",
+            "description": "Código ISO 4217",
+            "example": "USD"
+          },
+          "name": {
+            "type": "string",
+            "example": "Dólar estadounidense"
+          },
+          "symbol": {
+            "type": "string",
+            "example": "$"
+          },
+          "exchange_rate": {
+            "type": "number",
+            "description": "Unidades de la divisa por 1 USD",
+            "example": 1
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Vitamina C"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Caja x 30 tabletas"
+          },
+          "price": {
+            "type": "number",
+            "description": "Precio en la divisa base",
+            "example": 25.5
+          },
+          "currency_id": {
+            "type": "integer",
+            "description": "ID de la divisa base",
+            "example": 1
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "tax_cost": {
+            "type": "number",
+            "example": 4.8
+          },
+          "manufacturing_cost": {
+            "type": "number",
+            "example": 9.99
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProductInput": {
+        "type": "object",
+        "required": [
+          "name",
+          "price",
+          "currency_id",
+          "tax_cost",
+          "manufacturing_cost"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "Vitamina C"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Caja x 30 tabletas"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0,
+            "example": 25.5
+          },
+          "currency_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "tax_cost": {
+            "type": "number",
+            "minimum": 0,
+            "example": 4.8
+          },
+          "manufacturing_cost": {
+            "type": "number",
+            "minimum": 0,
+            "example": 9.99
+          }
+        }
+      },
+      "ProductPrice": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "product_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "currency_id": {
+            "type": "integer",
+            "example": 3
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "price": {
+            "type": "number",
+            "example": 102000
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProductPriceInput": {
+        "type": "object",
+        "required": [
+          "currency_id",
+          "price"
+        ],
+        "properties": {
+          "currency_id": {
+            "type": "integer",
+            "example": 3
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0,
+            "example": 102000
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
